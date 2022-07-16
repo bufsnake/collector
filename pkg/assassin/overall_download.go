@@ -13,7 +13,7 @@ import (
 )
 
 // 普通文件下载
-func (a *Assassin) OverallDownload(urlstr string) error {
+func (a *Assassin) OverallDownload(urlstr string, cl int64) error {
 	cli := &http.Client{
 		Timeout: 2 * time.Hour,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -49,7 +49,7 @@ func (a *Assassin) OverallDownload(urlstr string) error {
 		return err
 	}
 	defer res.Body.Close()
-	return a.savefile(res.Body, res.ContentLength, urlstr)
+	return a.savefile(res.Body, int64(cl), urlstr)
 }
 
 func (a *Assassin) savefile(body io.ReadCloser, cl int64, urlstr string) error {

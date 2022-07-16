@@ -60,7 +60,7 @@ func (r *runner) down(dw *sync.WaitGroup, conf *config.Config, urlstrs chan stri
 			// 不支持断点续传
 			retry := -1
 		again:
-			err = asin.OverallDownload(urlstr)
+			err = asin.OverallDownload(urlstr, int64(cl))
 			if err != nil {
 				if retry < r.conf.MaxRetry {
 					retry++
