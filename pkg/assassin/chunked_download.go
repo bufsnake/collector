@@ -12,8 +12,8 @@ import (
 	"time"
 )
 
-// 普通文件下载
-func (a *Assassin) OverallDownload(urlstr string, cl int64) error {
+// chunked传输
+func (a *Assassin) ChunkedDownload(urlstr string) error {
 	cli := &http.Client{
 		Timeout: 2 * time.Hour,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -49,18 +49,19 @@ func (a *Assassin) OverallDownload(urlstr string, cl int64) error {
 		return err
 	}
 	defer res.Body.Close()
-	return a.savefile(res.Body, int64(cl), urlstr)
+	return a.chunked_save_file(res.Body, urlstr)
 }
 
-func (a *Assassin) savefile(body io.ReadCloser, cl int64, urlstr string) error {
+func (a *Assassin) chunked_save_file(body io.ReadCloser, urlstr string) error {
 	outfile, err := os.Create(strings.TrimRight(a.conf.Folder, "/") + "/" + utils.URL2Filename(urlstr))
 	if err != nil {
 		return err
 	}
 	defer outfile.Close()
-	percentage := log.NewPercentage(utils.URL2Filename(urlstr), int(cl), "s")
+
+	percentage := log.NewPercentage(utils.URL2Filename(urlstr), 0, "c")
 	a.log.Add(percentage)
-	downloader := &Downloader{ReadCloser: body, percentage: percentage}
+	downloader := &Downloader{ReadCloser: body, percentage: percentage, chunked: true}
 	_, err = io.Copy(outfile, downloader)
 	if err != nil {
 		return err

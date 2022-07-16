@@ -86,11 +86,11 @@ type Percentage struct {
 	size     int    // 文件大小
 	finish   bool   // 是否已经完成
 	lock     *sync.Mutex
-	single   bool // 是否为整体下载
+	fav      string
 }
 
-func NewPercentage(filename string, total int, single bool) *Percentage {
-	percentage := Percentage{progress: 0, filename: filename, total: total, lock: &sync.Mutex{}, single: single}
+func NewPercentage(filename string, total int, fav string) *Percentage {
+	percentage := Percentage{progress: 0, filename: filename, total: total, lock: &sync.Mutex{}, fav: fav}
 	go percentage.calcSpeed()
 	return &percentage
 }
@@ -116,6 +116,19 @@ func (p *Percentage) AddProgress(progress int) {
 	if p.progress >= p.total {
 		p.progress = p.total
 	}
+}
+
+// 仅chunked使用
+func (p *Percentage) AddTotal(progress int) {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	p.total += progress
+}
+
+func (p *Percentage) DelTotal(count int) {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	p.total -= count
 }
 
 func (p *Percentage) getFileName() string {
@@ -145,15 +158,11 @@ func (p *Percentage) print(success bool) {
 	if len(progress) <= 7 {
 		progress = strings.Repeat(" ", 7-len(progress)) + progress
 	}
-	fav := "m"
-	if p.single {
-		fav = "s"
-	}
 	fmt.Printf("%s \033[K\033[?25l\n", fmt.Sprintf( // 清除当前行并打印进度
 		"%s %s (%s)%s %s %s/s",
 		filename,
 		utils.ByteFormat(float64(p.total), utils.RawUnitB, true),
-		fav,
+		p.fav,
 		"progress:",
 		progress,
 		utils.ByteFormat(float64(p.speed), utils.RawUnitB, false),

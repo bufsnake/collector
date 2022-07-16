@@ -23,7 +23,7 @@ type part_info struct {
 
 // 支持断点续传文件下载
 func (a *Assassin) BreakpointContinuinglyDownload(urlstr string, content_length int) error {
-	a.percentage = log.NewPercentage(utils.URL2Filename(urlstr), content_length, false)
+	a.percentage = log.NewPercentage(utils.URL2Filename(urlstr), content_length, "m")
 	a.log.Add(a.percentage)
 	part_size := 2 * 1024 * 1024
 	task_parts := make(map[int][2]int)

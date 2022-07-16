@@ -47,9 +47,33 @@ func (r *runner) down(dw *sync.WaitGroup, conf *config.Config, urlstrs chan stri
 	defer dw.Done()
 	for urlstr := range urlstrs {
 		asin := assassin.NewAssassin(conf, r.log)
-		dbc, cl, err := asin.DetectBreakpointContinuingly(urlstr)
+		detect_retry := -1
+	detect_again:
+		dbc, chunked, cl, err := asin.DetectBreakpointContinuingly(urlstr)
 		if err != nil {
-			r.log.Println("detect breakpoint continuingly", err)
+			if strings.Contains(err.Error(), "404") || strings.Contains(err.Error(), "content-length") {
+				r.log.Println("detect breakpoint continuingly", err)
+				continue
+			}
+			detect_retry++
+			if detect_retry == r.conf.MaxRetry {
+				continue
+			}
+			time.Sleep(2 * time.Second)
+			goto detect_again
+		}
+		if chunked {
+			retry := -1
+		chunked_again:
+			err = asin.ChunkedDownload(urlstr)
+			if err != nil {
+				if retry < r.conf.MaxRetry {
+					retry++
+					time.Sleep(2 * time.Second)
+					goto chunked_again
+				}
+				r.log.Println("chunked download", err)
+			}
 			continue
 		}
 		if cl == 0 || cl == -1 {
