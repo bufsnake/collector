@@ -1,0 +1,79 @@
+name: release
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Set up Go 1.17
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.17
+        id: go
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Build All
+        run: |
+          #GOOS=android GOARCH=386 go build -o collector_android-386 cmd/collector/main.go
+          #GOOS=android GOARCH=amd64 go build -o collector_android-amd64 cmd/collector/main.go
+          #GOOS=android GOARCH=arm go build -o collector_android-arm cmd/collector/main.go
+          #GOOS=darwin GOARCH=386 go build -o collector_darwin-386 cmd/collector/main.go
+          #GOOS=darwin GOARCH=arm go build -o collector_darwin-arm cmd/collector/main.go
+
+          #GOOS=aix GOARCH=ppc64 go build -o collector_aix-ppc64 cmd/collector/main.go
+          #GOOS=android GOARCH=arm64 go build -o collector_android-arm64 cmd/collector/main.go
+          GOOS=darwin GOARCH=amd64 go build -o collector_darwin-amd64 cmd/collector/main.go
+          GOOS=darwin GOARCH=arm64 go build -o collector_darwin-arm64 cmd/collector/main.go
+          #GOOS=dragonfly GOARCH=amd64 go build -o collector_dragonfly-amd64 cmd/collector/main.go
+          #GOOS=freebsd GOARCH=386 go build -o collector_freebsd-386 cmd/collector/main.go
+          #GOOS=freebsd GOARCH=amd64 go build -o collector_freebsd-amd64 cmd/collector/main.go
+          #GOOS=freebsd GOARCH=arm go build -o collector_freebsd-arm cmd/collector/main.go
+          #GOOS=illumos GOARCH=amd64 go build -o collector_illumos-amd64 cmd/collector/main.go
+          #GOOS=js GOARCH=wasm go build -o collector_js-wasm cmd/collector/main.go
+          GOOS=linux GOARCH=386 go build -o collector_linux-386 cmd/collector/main.go
+          GOOS=linux GOARCH=amd64 go build -o collector_linux-amd64 cmd/collector/main.go
+          GOOS=linux GOARCH=arm go build -o collector_linux-arm cmd/collector/main.go
+          GOOS=linux GOARCH=arm64 go build -o collector_linux-arm64 cmd/collector/main.go
+          #GOOS=linux GOARCH=ppc64 go build -o collector_linux-ppc64 cmd/collector/main.go
+          #GOOS=linux GOARCH=ppc64le go build -o collector_linux-ppc64le cmd/collector/main.go
+          #GOOS=linux GOARCH=mips go build -o collector_linux-mips cmd/collector/main.go
+          #GOOS=linux GOARCH=mipsle go build -o collector_linux-mipsle cmd/collector/main.go
+          #GOOS=linux GOARCH=mips64 go build -o collector_linux-mips64 cmd/collector/main.go
+          #GOOS=linux GOARCH=mips64le go build -o collector_linux-mips64le cmd/collector/main.go
+          #GOOS=linux GOARCH=s390x go build -o collector_linux-s390x cmd/collector/main.go
+          #GOOS=netbsd GOARCH=386 go build -o collector_netbsd-386 cmd/collector/main.go
+          #GOOS=netbsd GOARCH=amd64 go build -o collector_netbsd-amd64 cmd/collector/main.go
+          #GOOS=netbsd GOARCH=arm go build -o collector_netbsd-arm cmd/collector/main.go
+          #GOOS=openbsd GOARCH=386 go build -o collector_openbsd-386 cmd/collector/main.go
+          #GOOS=openbsd GOARCH=amd64 go build -o collector_openbsd-amd64 cmd/collector/main.go
+          #GOOS=openbsd GOARCH=arm go build -o collector_openbsd-arm cmd/collector/main.go
+          #GOOS=openbsd GOARCH=arm64 go build -o collector_openbsd-arm64 cmd/collector/main.go
+          #GOOS=plan9 GOARCH=386 go build -o collector_plan9-386 cmd/collector/main.go
+          #GOOS=plan9 GOARCH=amd64 go build -o collector_plan9-amd64 cmd/collector/main.go
+          #GOOS=plan9 GOARCH=arm go build -o collector_plan9-arm cmd/collector/main.go
+          #GOOS=solaris GOARCH=amd64 go build -o collector_solaris-amd64 cmd/collector/main.go
+          chmod +x  collector_*
+          GOOS=windows GOARCH=386 go build -o collector_windows-386.exe cmd/collector/main.go
+          GOOS=windows GOARCH=amd64 go build -o collector_windows-amd64.exe cmd/collector/main.go
+
+      - name: Get Current Date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y%m%d%H%M')"
+          
+      - name: Auto Release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.date.outputs.date }}
+          release_name: Release ${{ steps.date.outputs.date }}
+          files: |
+            collector_*
